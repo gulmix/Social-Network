@@ -14,10 +14,11 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
-	if err := database.InitPostgres(cfg); err != nil {
+	db, err := database.InitPostgres(cfg)
+	if err != nil {
 		log.Fatalf("Failed to initialize PostgreSQL: %v", err)
 	}
-	defer database.ClosePostgres()
+	defer db.Close()
 
 	if err := database.InitRedis(cfg); err != nil {
 		log.Fatalf("Failed to initialize Redis: %v", err)

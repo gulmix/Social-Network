@@ -11,8 +11,11 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
 	"github.com/gulmix/Social-Network/internal/config"
+	"github.com/gulmix/Social-Network/internal/database"
 	"github.com/gulmix/Social-Network/internal/graph"
 	"github.com/gulmix/Social-Network/internal/middleware"
+	"github.com/gulmix/Social-Network/internal/repository"
+	"github.com/gulmix/Social-Network/internal/service"
 	"github.com/vektah/gqlparser/v2/ast"
 )
 
@@ -27,7 +30,16 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 
 	router.Use(middleware.CORS())
 
-	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: &graph.Resolver{}}))
+	db, err := database.InitPostgres(cfg)
+	if err != nil {
+		panic(err)
+	}
+
+	userRepo := repository.NewUserRepository(db)
+	authService := service.NewAuthService(userRepo, cfg)
+	resolver := graph.NewResolver(authService, userRepo, cfg)
+
+	srv := handler.New(graph.NewExecutableSchema(graph.Config{Resolvers: resolver}))
 
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})

@@ -5,31 +5,23 @@ import (
 	"fmt"
 	"log"
 
+	_ "github.com/lib/pq"
+
 	"github.com/gulmix/Social-Network/internal/config"
 )
 
-var DB *sql.DB
-
-func InitPostgres(cfg *config.Config) error {
+func InitPostgres(cfg *config.Config) (*sql.DB, error) {
 	dsn := cfg.Database.ConnectionString()
 
-	var err error
-	DB, err = sql.Open("postgres", dsn)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return fmt.Errorf("failed to open database: %w", err)
+		return nil, fmt.Errorf("failed to open database: %w", err)
 	}
 
-	if err = DB.Ping(); err != nil {
-		return fmt.Errorf("failed to ping database: %w", err)
+	if err = db.Ping(); err != nil {
+		return nil, fmt.Errorf("failed to ping database: %w", err)
 	}
 
 	log.Println("Successfully connected to PostgreSQL")
-	return nil
-}
-
-func ClosePostgres() error {
-	if DB != nil {
-		return DB.Close()
-	}
-	return nil
+	return db, nil
 }

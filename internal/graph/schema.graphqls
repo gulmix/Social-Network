@@ -1,24 +1,47 @@
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
-}
+scalar Time
 
 type User {
   id: ID!
-  name: String!
+  email: String!
+  username: String!
+  firstName: String
+  lastName: String
+  bio: String
+  avatarUrl: String
+  emailVerified: Boolean!
+  oauthProvider: String
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type AuthPayload {
+  token: String!
+  user: User!
+}
+
+input RegisterInput {
+  email: String!
+  username: String!
+  password: String!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
 }
 
 type Query {
-  todos: [Todo!]!
-}
-
-input NewTodo {
-  text: String!
-  userId: String!
+  me: User
+  user(id: ID!): User
+  users: [User!]!
 }
 
 type Mutation {
-  createTodo(input: NewTodo!): Todo!
+  register(input: RegisterInput!): AuthPayload!
+  login(input: LoginInput!): AuthPayload!
+  oauthLogin(provider: String!, code: String!): AuthPayload!
+}
+
+type Subscription {
+  userUpdated: User!
 }

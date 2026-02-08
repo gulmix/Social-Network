@@ -10,16 +10,83 @@ import (
 	"fmt"
 
 	"github.com/gulmix/Social-Network/internal/graph/model"
+	"github.com/gulmix/Social-Network/internal/middleware"
+	"github.com/gulmix/Social-Network/internal/models"
 )
 
-// CreateTodo is the resolver for the createTodo field.
-func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: CreateTodo - createTodo"))
+// Register is the resolver for the register field.
+func (r *mutationResolver) Register(ctx context.Context, input model.RegisterInput) (*model.AuthPayload, error) {
+	user, token, err := r.AuthService.Register(input.Email, input.Username, input.Password)
+	if err != nil {
+		return nil, fmt.Errorf("registration failed: %w", err)
+	}
+
+	return &model.AuthPayload{
+		Token: token,
+		User:  toGraphQLUser(user),
+	}, nil
 }
 
-// Todos is the resolver for the todos field.
-func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+// Login is the resolver for the login field.
+func (r *mutationResolver) Login(ctx context.Context, input model.LoginInput) (*model.AuthPayload, error) {
+	user, token, err := r.AuthService.Login(input.Email, input.Password)
+	if err != nil {
+		return nil, fmt.Errorf("login failed: %w", err)
+	}
+
+	return &model.AuthPayload{
+		Token: token,
+		User:  toGraphQLUser(user),
+	}, nil
+}
+
+// OauthLogin is the resolver for the oauthLogin field.
+func (r *mutationResolver) OauthLogin(ctx context.Context, provider string, code string) (*model.AuthPayload, error) {
+	user, token, err := r.AuthService.OAuthLogin(ctx, provider, code)
+	if err != nil {
+		return nil, fmt.Errorf("oauth login failed: %w", err)
+	}
+
+	return &model.AuthPayload{
+		Token: token,
+		User:  toGraphQLUser(user),
+	}, nil
+}
+
+// Me is the resolver for the me field.
+func (r *queryResolver) Me(ctx context.Context) (*model.User, error) {
+	userID, exists := middleware.GetUserIDFromContext(ctx)
+	if !exists {
+		return nil, fmt.Errorf("unauthorized")
+	}
+
+	user, err := r.UserRepo.GetUserByID(userID)
+	if err != nil {
+		return nil, fmt.Errorf("user not found: %w", err)
+	}
+
+	return toGraphQLUser(user), nil
+}
+
+// User is the resolver for the user field.
+func (r *queryResolver) User(ctx context.Context, id string) (*model.User, error) {
+	user, err := r.UserRepo.GetUserByID(id)
+	if err != nil {
+		return nil, fmt.Errorf("user not found: %w", err)
+	}
+
+	return toGraphQLUser(user), nil
+}
+
+// Users is the resolver for the users field.
+func (r *queryResolver) Users(ctx context.Context) ([]*model.User, error) {
+	return []*model.User{}, nil
+}
+
+// UserUpdated is the resolver for the userUpdated field.
+func (r *subscriptionResolver) UserUpdated(ctx context.Context) (<-chan *model.User, error) {
+	ch := make(chan *model.User)
+	return ch, nil
 }
 
 // Mutation returns MutationResolver implementation.
@@ -28,5 +95,38 @@ func (r *Resolver) Mutation() MutationResolver { return &mutationResolver{r} }
 // Query returns QueryResolver implementation.
 func (r *Resolver) Query() QueryResolver { return &queryResolver{r} }
 
+// Subscription returns SubscriptionResolver implementation.
+func (r *Resolver) Subscription() SubscriptionResolver { return &subscriptionResolver{r} }
+
 type mutationResolver struct{ *Resolver }
 type queryResolver struct{ *Resolver }
+type subscriptionResolver struct{ *Resolver }
+
+func toGraphQLUser(user *models.User) *model.User {
+	result := &model.User{
+		ID:            user.ID,
+		Email:         user.Email,
+		Username:      user.Username,
+		EmailVerified: user.EmailVerified,
+		CreatedAt:     user.CreatedAt,
+		UpdatedAt:     user.UpdatedAt,
+	}
+
+	if user.FirstName.Valid {
+		result.FirstName = &user.FirstName.String
+	}
+	if user.LastName.Valid {
+		result.LastName = &user.LastName.String
+	}
+	if user.Bio.Valid {
+		result.Bio = &user.Bio.String
+	}
+	if user.AvatarURL.Valid {
+		result.AvatarURL = &user.AvatarURL.String
+	}
+	if user.OAuthProvider.Valid {
+		result.OauthProvider = &user.OAuthProvider.String
+	}
+
+	return result
+}

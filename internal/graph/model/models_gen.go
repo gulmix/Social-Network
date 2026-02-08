@@ -2,25 +2,45 @@
 
 package model
 
-type Mutation struct {
+import (
+	"time"
+)
+
+type AuthPayload struct {
+	Token string `json:"token"`
+	User  *User  `json:"user"`
 }
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+type LoginInput struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type Mutation struct {
 }
 
 type Query struct {
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
+type RegisterInput struct {
+	Email    string `json:"email"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
+type Subscription struct {
 }
 
 type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+	ID            string    `json:"id"`
+	Email         string    `json:"email"`
+	Username      string    `json:"username"`
+	FirstName     *string   `json:"firstName,omitempty"`
+	LastName      *string   `json:"lastName,omitempty"`
+	Bio           *string   `json:"bio,omitempty"`
+	AvatarURL     *string   `json:"avatarUrl,omitempty"`
+	EmailVerified bool      `json:"emailVerified"`
+	OauthProvider *string   `json:"oauthProvider,omitempty"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
 }
