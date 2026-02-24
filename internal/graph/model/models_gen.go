@@ -11,12 +11,63 @@ type AuthPayload struct {
 	User  *User  `json:"user"`
 }
 
+type Comment struct {
+	ID        string     `json:"id"`
+	Post      *Post      `json:"post"`
+	User      *User      `json:"user"`
+	Content   string     `json:"content"`
+	Parent    *Comment   `json:"parent,omitempty"`
+	Replies   []*Comment `json:"replies"`
+	CreatedAt time.Time  `json:"createdAt"`
+	UpdatedAt time.Time  `json:"updatedAt"`
+}
+
+type CreateCommentInput struct {
+	PostID   string  `json:"postId"`
+	Content  string  `json:"content"`
+	ParentID *string `json:"parentId,omitempty"`
+}
+
+type CreatePostInput struct {
+	Content   string   `json:"content"`
+	ImageUrls []string `json:"imageUrls,omitempty"`
+	IsPublic  *bool    `json:"isPublic,omitempty"`
+}
+
+type Follow struct {
+	ID        string    `json:"id"`
+	Follower  *User     `json:"follower"`
+	Following *User     `json:"following"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
+type Like struct {
+	ID        string    `json:"id"`
+	User      *User     `json:"user"`
+	Post      *Post     `json:"post"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
 type LoginInput struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
 type Mutation struct {
+}
+
+type Post struct {
+	ID            string     `json:"id"`
+	User          *User      `json:"user"`
+	Content       string     `json:"content"`
+	ImageUrls     []string   `json:"imageUrls,omitempty"`
+	IsPublic      bool       `json:"isPublic"`
+	Likes         []*Like    `json:"likes"`
+	Comments      []*Comment `json:"comments"`
+	LikesCount    int32      `json:"likesCount"`
+	CommentsCount int32      `json:"commentsCount"`
+	CreatedAt     time.Time  `json:"createdAt"`
+	UpdatedAt     time.Time  `json:"updatedAt"`
 }
 
 type Query struct {
@@ -31,16 +82,31 @@ type RegisterInput struct {
 type Subscription struct {
 }
 
+type UpdateCommentInput struct {
+	Content string `json:"content"`
+}
+
+type UpdatePostInput struct {
+	Content   *string  `json:"content,omitempty"`
+	ImageUrls []string `json:"imageUrls,omitempty"`
+	IsPublic  *bool    `json:"isPublic,omitempty"`
+}
+
 type User struct {
-	ID            string    `json:"id"`
-	Email         string    `json:"email"`
-	Username      string    `json:"username"`
-	FirstName     *string   `json:"firstName,omitempty"`
-	LastName      *string   `json:"lastName,omitempty"`
-	Bio           *string   `json:"bio,omitempty"`
-	AvatarURL     *string   `json:"avatarUrl,omitempty"`
-	EmailVerified bool      `json:"emailVerified"`
-	OauthProvider *string   `json:"oauthProvider,omitempty"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	ID             string    `json:"id"`
+	Email          string    `json:"email"`
+	Username       string    `json:"username"`
+	FirstName      *string   `json:"firstName,omitempty"`
+	LastName       *string   `json:"lastName,omitempty"`
+	Bio            *string   `json:"bio,omitempty"`
+	AvatarURL      *string   `json:"avatarUrl,omitempty"`
+	EmailVerified  bool      `json:"emailVerified"`
+	OauthProvider  *string   `json:"oauthProvider,omitempty"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+	Posts          []*Post   `json:"posts"`
+	Followers      []*User   `json:"followers"`
+	Following      []*User   `json:"following"`
+	FollowersCount int32     `json:"followersCount"`
+	FollowingCount int32     `json:"followingCount"`
 }

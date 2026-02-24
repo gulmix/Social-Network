@@ -12,6 +12,50 @@ type User {
   oauthProvider: String
   createdAt: Time!
   updatedAt: Time!
+  posts: [Post!]!
+  followers: [User!]!
+  following: [User!]!
+  followersCount: Int!
+  followingCount: Int!
+}
+
+type Post {
+  id: ID!
+  user: User!
+  content: String!
+  imageUrls: [String!]
+  isPublic: Boolean!
+  likes: [Like!]!
+  comments: [Comment!]!
+  likesCount: Int!
+  commentsCount: Int!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type Comment {
+  id: ID!
+  post: Post!
+  user: User!
+  content: String!
+  parent: Comment
+  replies: [Comment!]!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type Like {
+  id: ID!
+  user: User!
+  post: Post!
+  createdAt: Time!
+}
+
+type Follow {
+  id: ID!
+  follower: User!
+  following: User!
+  createdAt: Time!
 }
 
 type AuthPayload {
@@ -30,18 +74,75 @@ input LoginInput {
   password: String!
 }
 
+input CreatePostInput {
+  content: String!
+  imageUrls: [String!]
+  isPublic: Boolean
+}
+
+input UpdatePostInput {
+  content: String
+  imageUrls: [String!]
+  isPublic: Boolean
+}
+
+input CreateCommentInput {
+  postId: ID!
+  content: String!
+  parentId: ID
+}
+
+input UpdateCommentInput {
+  content: String!
+}
+
 type Query {
   me: User
   user(id: ID!): User
   users: [User!]!
+  
+  posts(userId: ID, limit: Int = 20, offset: Int = 0): [Post!]!
+  post(id: ID!): Post
+  userPosts(userId: ID!, limit: Int = 20, offset: Int = 0): [Post!]!
+  feed(limit: Int = 20, offset: Int = 0): [Post!]!
+  
+  comments(postId: ID!, limit: Int = 20, offset: Int = 0): [Comment!]!
+  comment(id: ID!): Comment
+  
+  likes(postId: ID!): [Like!]!
+  isLiked(postId: ID!): Boolean!
+  
+  followers(userId: ID!): [User!]!
+  following(userId: ID!): [User!]!
+  isFollowing(userId: ID!): Boolean!
 }
 
 type Mutation {
   register(input: RegisterInput!): AuthPayload!
   login(input: LoginInput!): AuthPayload!
   oauthLogin(provider: String!, code: String!): AuthPayload!
+  
+  createPost(input: CreatePostInput!): Post!
+  updatePost(id: ID!, input: UpdatePostInput!): Post!
+  deletePost(id: ID!): Boolean!
+  
+  createComment(input: CreateCommentInput!): Comment!
+  updateComment(id: ID!, input: UpdateCommentInput!): Comment!
+  deleteComment(id: ID!): Boolean!
+  
+  likePost(postId: ID!): Like!
+  unlikePost(postId: ID!): Boolean!
+  
+  followUser(userId: ID!): Follow!
+  unfollowUser(userId: ID!): Boolean!
 }
 
 type Subscription {
   userUpdated: User!
+  postCreated: Post!
+  commentCreated(postId: ID!): Comment!
+  likeAdded(postId: ID!): Like!
+  likeRemoved(postId: ID!): ID!
+  userFollowed(userId: ID!): Follow!
+  userUnfollowed(userId: ID!): ID!
 }

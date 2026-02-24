@@ -15,52 +15,16 @@ const UserIDKey contextKey = "userID"
 
 func Auth(cfg *config.Config) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
+		// Try Authorization header first, then ?token= query param (for WebSocket upgrades).
+		tokenString := utils.ExtractTokenFromHeader(c.GetHeader("Authorization"))
+		if tokenString == "" {
+			tokenString = c.Query("token")
+		}
+
+		if tokenString == "" {
 			ctx := context.WithValue(c.Request.Context(), "config", cfg)
 			c.Request = c.Request.WithContext(ctx)
 			c.Next()
-			return
-		}
-
-		tokenString := utils.ExtractTokenFromHeader(authHeader)
-		if tokenString == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header"})
-			c.Abort()
-			return
-		}
-
-		claims, err := utils.ValidateToken(tokenString, cfg)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
-			c.Abort()
-			return
-		}
-
-		ctx := context.WithValue(c.Request.Context(), UserIDKey, claims.UserID)
-		ctx = context.WithValue(ctx, "config", cfg)
-		c.Request = c.Request.WithContext(ctx)
-
-		c.Set("userID", claims.UserID)
-		c.Set("userEmail", claims.Email)
-
-		c.Next()
-	}
-}
-
-func RequireAuth(cfg *config.Config) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		authHeader := c.GetHeader("Authorization")
-		if authHeader == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication required"})
-			c.Abort()
-			return
-		}
-
-		tokenString := utils.ExtractTokenFromHeader(authHeader)
-		if tokenString == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authorization header"})
-			c.Abort()
 			return
 		}
 

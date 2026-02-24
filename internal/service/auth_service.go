@@ -55,7 +55,7 @@ func (s *AuthService) Register(email, username, password string) (*models.User, 
 		EmailVerified: false,
 	}
 
-	if err := s.userRepo.CreateUser(user); err != nil {
+	if err = s.userRepo.CreateUser(user); err != nil {
 		return nil, "", fmt.Errorf("failed to create user: %w", err)
 	}
 
@@ -148,7 +148,7 @@ func (s *AuthService) OAuthLogin(ctx context.Context, provider string, code stri
 		user.FirstName = sql.NullString{String: oauthUserInfo.Name, Valid: true}
 	}
 
-	if err := s.userRepo.CreateUser(user); err != nil {
+	if err = s.userRepo.CreateUser(user); err != nil {
 		return nil, "", fmt.Errorf("failed to create user: %w", err)
 	}
 

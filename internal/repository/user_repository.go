@@ -150,6 +150,43 @@ func (r *UserRepository) GetUserByUsername(username string) (*models.User, error
 	return user, nil
 }
 
+func (r *UserRepository) GetAllUsers() ([]*models.User, error) {
+	query := `
+		SELECT id, email, username, password_hash, first_name, last_name, 
+		       bio, avatar_url, email_verified, oauth_provider, oauth_provider_id,
+		       created_at, updated_at
+		FROM users
+		ORDER BY created_at DESC
+	`
+
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []*models.User
+	for rows.Next() {
+		user := &models.User{}
+		err = rows.Scan(
+			&user.ID, &user.Email, &user.Username, &user.PasswordHash,
+			&user.FirstName, &user.LastName, &user.Bio, &user.AvatarURL,
+			&user.EmailVerified, &user.OAuthProvider, &user.OAuthProviderID,
+			&user.CreatedAt, &user.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
 func (r *UserRepository) UpdateUser(user *models.User) error {
 	user.UpdatedAt = time.Now()
 	query := `
