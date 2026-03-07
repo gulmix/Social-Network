@@ -45,22 +45,38 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	}
 	ps := pubsub.New(database.RedisClient)
 
+	// Repositories
 	userRepo := repository.NewUserRepository(db)
 	postRepo := repository.NewPostRepository(db)
 	commentRepo := repository.NewCommentRepository(db)
 	likeRepo := repository.NewLikeRepository(db)
 	followRepo := repository.NewFollowRepository(db)
+	convRepo := repository.NewConversationRepository(db)
+	msgRepo := repository.NewMessageRepository(db)
+	groupRepo := repository.NewGroupRepository(db)
+	eventRepo := repository.NewEventRepository(db)
+	notifRepo := repository.NewNotificationRepository(db)
+	storyRepo := repository.NewStoryRepository(db)
 
+	// Services
 	authService := service.NewAuthService(userRepo, cfg)
 	userService := service.NewUserService(userRepo, followRepo)
 	postService := service.NewPostService(postRepo, userRepo, likeRepo, commentRepo, followRepo)
 	commentService := service.NewCommentService(commentRepo, postRepo, userRepo)
 	likeService := service.NewLikeService(likeRepo, postRepo, userRepo)
 	followService := service.NewFollowService(followRepo, userRepo)
+	convService := service.NewConversationService(convRepo, userRepo)
+	msgService := service.NewMessageService(msgRepo, convRepo)
+	groupService := service.NewGroupService(groupRepo)
+	eventService := service.NewEventService(eventRepo)
+	notifService := service.NewNotificationService(notifRepo)
+	storyService := service.NewStoryService(storyRepo, followRepo)
 
 	resolver := graph.NewResolver(
 		authService, userService, postService,
 		commentService, likeService, followService,
+		convService, msgService, groupService,
+		eventService, notifService, storyService,
 		userRepo, postRepo, commentRepo, likeRepo, followRepo,
 		cfg, ps,
 	)
@@ -70,6 +86,10 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 	srv.AddTransport(transport.Options{})
 	srv.AddTransport(transport.GET{})
 	srv.AddTransport(transport.POST{})
+	srv.AddTransport(transport.MultipartForm{
+		MaxMemory:     32 << 20, // 32MB
+		MaxUploadSize: 10 << 20, // 10MB
+	})
 	srv.AddTransport(transport.Websocket{
 		KeepAlivePingInterval: 10 * time.Second,
 		Upgrader: websocket.Upgrader{
@@ -108,9 +128,42 @@ func SetupRouter(cfg *config.Config) *gin.Engine {
 		Cache: lru.New[string](100),
 	})
 
+	// GraphQL endpoints
 	router.GET("/", gin.WrapH(playground.Handler("GraphQL playground", "/query")))
 	router.POST("/query", middleware.Auth(cfg), gin.WrapH(srv))
 	router.GET("/query", middleware.Auth(cfg), gin.WrapH(srv))
+
+	// Media upload endpoint
+	uploadDir := cfg.Upload.Dir
+	if uploadDir == "" {
+		uploadDir = "./uploads"
+	}
+	router.Static("/uploads", uploadDir)
+	router.POST("/upload", middleware.Auth(cfg), func(c *gin.Context) {
+		_, exists := middleware.GetUserIDFromContext(c.Request.Context())
+		if !exists {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+			return
+		}
+
+		file, err := c.FormFile("file")
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "no file provided"})
+			return
+		}
+
+		filename, _, err := utils.SaveUploadedFile(file, uploadDir)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+
+		url := "/uploads/" + filename
+		c.JSON(http.StatusOK, gin.H{
+			"url":      url,
+			"filename": filename,
+		})
+	})
 
 	return router
 }

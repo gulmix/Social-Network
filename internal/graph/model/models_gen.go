@@ -22,10 +22,42 @@ type Comment struct {
 	UpdatedAt time.Time  `json:"updatedAt"`
 }
 
+type Conversation struct {
+	ID           string    `json:"id"`
+	IsGroup      bool      `json:"isGroup"`
+	Name         *string   `json:"name,omitempty"`
+	Participants []*User   `json:"participants"`
+	LastMessage  *Message  `json:"lastMessage,omitempty"`
+	UnreadCount  int32     `json:"unreadCount"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+}
+
 type CreateCommentInput struct {
 	PostID   string  `json:"postId"`
 	Content  string  `json:"content"`
 	ParentID *string `json:"parentId,omitempty"`
+}
+
+type CreateEventInput struct {
+	Title       string     `json:"title"`
+	Description *string    `json:"description,omitempty"`
+	Location    *string    `json:"location,omitempty"`
+	GroupID     *string    `json:"groupId,omitempty"`
+	StartTime   time.Time  `json:"startTime"`
+	EndTime     *time.Time `json:"endTime,omitempty"`
+}
+
+type CreateGroupInput struct {
+	Name        string  `json:"name"`
+	Description *string `json:"description,omitempty"`
+	IsPrivate   *bool   `json:"isPrivate,omitempty"`
+}
+
+type CreateGroupPostInput struct {
+	GroupID   string   `json:"groupId"`
+	Content   string   `json:"content"`
+	ImageUrls []string `json:"imageUrls,omitempty"`
 }
 
 type CreatePostInput struct {
@@ -34,11 +66,67 @@ type CreatePostInput struct {
 	IsPublic  *bool    `json:"isPublic,omitempty"`
 }
 
+type CreateStoryInput struct {
+	MediaURL string  `json:"mediaUrl"`
+	Content  *string `json:"content,omitempty"`
+}
+
+type Event struct {
+	ID             string     `json:"id"`
+	Creator        *User      `json:"creator"`
+	Group          *Group     `json:"group,omitempty"`
+	Title          string     `json:"title"`
+	Description    *string    `json:"description,omitempty"`
+	Location       *string    `json:"location,omitempty"`
+	StartTime      time.Time  `json:"startTime"`
+	EndTime        *time.Time `json:"endTime,omitempty"`
+	AttendeesCount int32      `json:"attendeesCount"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	UpdatedAt      time.Time  `json:"updatedAt"`
+}
+
+type EventAttendee struct {
+	ID        string    `json:"id"`
+	User      *User     `json:"user"`
+	Status    string    `json:"status"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+
 type Follow struct {
 	ID        string    `json:"id"`
 	Follower  *User     `json:"follower"`
 	Following *User     `json:"following"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+type Group struct {
+	ID           string    `json:"id"`
+	Name         string    `json:"name"`
+	Description  *string   `json:"description,omitempty"`
+	AvatarURL    *string   `json:"avatarUrl,omitempty"`
+	Creator      *User     `json:"creator"`
+	IsPrivate    bool      `json:"isPrivate"`
+	MembersCount int32     `json:"membersCount"`
+	IsMember     bool      `json:"isMember"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+}
+
+type GroupMember struct {
+	ID       string    `json:"id"`
+	User     *User     `json:"user"`
+	Role     string    `json:"role"`
+	JoinedAt time.Time `json:"joinedAt"`
+}
+
+type GroupPost struct {
+	ID        string    `json:"id"`
+	Group     *Group    `json:"group"`
+	User      *User     `json:"user"`
+	Content   string    `json:"content"`
+	ImageUrls []string  `json:"imageUrls,omitempty"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type Like struct {
@@ -53,7 +141,27 @@ type LoginInput struct {
 	Password string `json:"password"`
 }
 
+type Message struct {
+	ID           string        `json:"id"`
+	Conversation *Conversation `json:"conversation"`
+	Sender       *User         `json:"sender"`
+	Content      *string       `json:"content,omitempty"`
+	MediaURL     *string       `json:"mediaUrl,omitempty"`
+	CreatedAt    time.Time     `json:"createdAt"`
+}
+
 type Mutation struct {
+}
+
+type Notification struct {
+	ID          string    `json:"id"`
+	User        *User     `json:"user"`
+	Actor       *User     `json:"actor,omitempty"`
+	Type        string    `json:"type"`
+	ReferenceID *string   `json:"referenceId,omitempty"`
+	Content     string    `json:"content"`
+	IsRead      bool      `json:"isRead"`
+	CreatedAt   time.Time `json:"createdAt"`
 }
 
 type Post struct {
@@ -79,11 +187,47 @@ type RegisterInput struct {
 	Password string `json:"password"`
 }
 
+type SendMessageInput struct {
+	ConversationID string  `json:"conversationId"`
+	Content        *string `json:"content,omitempty"`
+	MediaURL       *string `json:"mediaUrl,omitempty"`
+}
+
+type Story struct {
+	ID         string    `json:"id"`
+	User       *User     `json:"user"`
+	MediaURL   string    `json:"mediaUrl"`
+	Content    *string   `json:"content,omitempty"`
+	ViewsCount int32     `json:"viewsCount"`
+	ExpiresAt  time.Time `json:"expiresAt"`
+	CreatedAt  time.Time `json:"createdAt"`
+}
+
+type StoryView struct {
+	ID       string    `json:"id"`
+	Viewer   *User     `json:"viewer"`
+	ViewedAt time.Time `json:"viewedAt"`
+}
+
 type Subscription struct {
 }
 
 type UpdateCommentInput struct {
 	Content string `json:"content"`
+}
+
+type UpdateEventInput struct {
+	Title       *string    `json:"title,omitempty"`
+	Description *string    `json:"description,omitempty"`
+	Location    *string    `json:"location,omitempty"`
+	StartTime   *time.Time `json:"startTime,omitempty"`
+	EndTime     *time.Time `json:"endTime,omitempty"`
+}
+
+type UpdateGroupInput struct {
+	Name        *string `json:"name,omitempty"`
+	Description *string `json:"description,omitempty"`
+	IsPrivate   *bool   `json:"isPrivate,omitempty"`
 }
 
 type UpdatePostInput struct {

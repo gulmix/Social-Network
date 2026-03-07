@@ -63,6 +63,116 @@ type AuthPayload {
   user: User!
 }
 
+# ===== Conversations & Messages =====
+
+type Conversation {
+  id: ID!
+  isGroup: Boolean!
+  name: String
+  participants: [User!]!
+  lastMessage: Message
+  unreadCount: Int!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type Message {
+  id: ID!
+  conversation: Conversation!
+  sender: User!
+  content: String
+  mediaUrl: String
+  createdAt: Time!
+}
+
+# ===== Groups =====
+
+type Group {
+  id: ID!
+  name: String!
+  description: String
+  avatarUrl: String
+  creator: User!
+  isPrivate: Boolean!
+  membersCount: Int!
+  isMember: Boolean!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type GroupMember {
+  id: ID!
+  user: User!
+  role: String!
+  joinedAt: Time!
+}
+
+type GroupPost {
+  id: ID!
+  group: Group!
+  user: User!
+  content: String!
+  imageUrls: [String!]
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+# ===== Events =====
+
+type Event {
+  id: ID!
+  creator: User!
+  group: Group
+  title: String!
+  description: String
+  location: String
+  startTime: Time!
+  endTime: Time
+  attendeesCount: Int!
+  createdAt: Time!
+  updatedAt: Time!
+}
+
+type EventAttendee {
+  id: ID!
+  user: User!
+  status: String!
+  createdAt: Time!
+}
+
+# ===== Notifications =====
+
+type Notification {
+  id: ID!
+  user: User!
+  actor: User
+  type: String!
+  referenceId: String
+  content: String!
+  isRead: Boolean!
+  createdAt: Time!
+}
+
+# ===== Stories =====
+
+type Story {
+  id: ID!
+  user: User!
+  mediaUrl: String!
+  content: String
+  viewsCount: Int!
+  expiresAt: Time!
+  createdAt: Time!
+}
+
+type StoryView {
+  id: ID!
+  viewer: User!
+  viewedAt: Time!
+}
+
+# ===== Inputs =====
+
 input RegisterInput {
   email: String!
   username: String!
@@ -96,45 +206,163 @@ input UpdateCommentInput {
   content: String!
 }
 
+input SendMessageInput {
+  conversationId: ID!
+  content: String
+  mediaUrl: String
+}
+
+input CreateGroupInput {
+  name: String!
+  description: String
+  isPrivate: Boolean
+}
+
+input UpdateGroupInput {
+  name: String
+  description: String
+  isPrivate: Boolean
+}
+
+input CreateGroupPostInput {
+  groupId: ID!
+  content: String!
+  imageUrls: [String!]
+}
+
+input CreateEventInput {
+  title: String!
+  description: String
+  location: String
+  groupId: ID
+  startTime: Time!
+  endTime: Time
+}
+
+input UpdateEventInput {
+  title: String
+  description: String
+  location: String
+  startTime: Time
+  endTime: Time
+}
+
+input CreateStoryInput {
+  mediaUrl: String!
+  content: String
+}
+
 type Query {
+  # Auth
   me: User
+
+  # Users
   user(id: ID!): User
   users: [User!]!
-  
+
+  # Posts
   posts(userId: ID, limit: Int = 20, offset: Int = 0): [Post!]!
   post(id: ID!): Post
   userPosts(userId: ID!, limit: Int = 20, offset: Int = 0): [Post!]!
   feed(limit: Int = 20, offset: Int = 0): [Post!]!
-  
+
+  # Comments
   comments(postId: ID!, limit: Int = 20, offset: Int = 0): [Comment!]!
   comment(id: ID!): Comment
-  
+
+  # Likes
   likes(postId: ID!): [Like!]!
   isLiked(postId: ID!): Boolean!
-  
+
+  # Follows
   followers(userId: ID!): [User!]!
   following(userId: ID!): [User!]!
   isFollowing(userId: ID!): Boolean!
+
+  # Conversations & Messages
+  conversations(limit: Int = 20, offset: Int = 0): [Conversation!]!
+  conversation(id: ID!): Conversation
+  messages(conversationId: ID!, limit: Int = 50, offset: Int = 0): [Message!]!
+
+  # Groups
+  groups(limit: Int = 20, offset: Int = 0): [Group!]!
+  group(id: ID!): Group
+  myGroups: [Group!]!
+  groupMembers(groupId: ID!): [GroupMember!]!
+  groupPosts(groupId: ID!, limit: Int = 20, offset: Int = 0): [GroupPost!]!
+
+  # Events
+  events(limit: Int = 20, offset: Int = 0): [Event!]!
+  event(id: ID!): Event
+  groupEvents(groupId: ID!, limit: Int = 20, offset: Int = 0): [Event!]!
+  eventAttendees(eventId: ID!): [EventAttendee!]!
+
+  # Notifications
+  notifications(limit: Int = 20, offset: Int = 0): [Notification!]!
+  unreadNotificationsCount: Int!
+
+  # Stories
+  story(id: ID!): Story
+  userStories(userId: ID!): [Story!]!
+  feedStories: [Story!]!
+  storyViews(storyId: ID!): [StoryView!]!
 }
 
 type Mutation {
+  # Auth
   register(input: RegisterInput!): AuthPayload!
   login(input: LoginInput!): AuthPayload!
   oauthLogin(provider: String!, code: String!): AuthPayload!
-  
+
+  # Posts
   createPost(input: CreatePostInput!): Post!
   updatePost(id: ID!, input: UpdatePostInput!): Post!
   deletePost(id: ID!): Boolean!
-  
+
+  # Comments
   createComment(input: CreateCommentInput!): Comment!
   updateComment(id: ID!, input: UpdateCommentInput!): Comment!
   deleteComment(id: ID!): Boolean!
-  
+
+  # Likes
   likePost(postId: ID!): Like!
   unlikePost(postId: ID!): Boolean!
-  
+
+  # Follows
   followUser(userId: ID!): Follow!
   unfollowUser(userId: ID!): Boolean!
+
+  # Conversations & Messages
+  createDirectConversation(userId: ID!): Conversation!
+  createGroupConversation(name: String!, participantIds: [ID!]!): Conversation!
+  sendMessage(input: SendMessageInput!): Message!
+  deleteMessage(id: ID!): Boolean!
+  markConversationAsRead(conversationId: ID!): Boolean!
+
+  # Groups
+  createGroup(input: CreateGroupInput!): Group!
+  updateGroup(id: ID!, input: UpdateGroupInput!): Group!
+  deleteGroup(id: ID!): Boolean!
+  joinGroup(groupId: ID!): Boolean!
+  leaveGroup(groupId: ID!): Boolean!
+  createGroupPost(input: CreateGroupPostInput!): GroupPost!
+  deleteGroupPost(id: ID!): Boolean!
+
+  # Events
+  createEvent(input: CreateEventInput!): Event!
+  updateEvent(id: ID!, input: UpdateEventInput!): Event!
+  deleteEvent(id: ID!): Boolean!
+  respondToEvent(eventId: ID!, status: String!): Boolean!
+  cancelEventAttendance(eventId: ID!): Boolean!
+
+  # Notifications
+  markNotificationAsRead(id: ID!): Boolean!
+  markAllNotificationsAsRead: Boolean!
+
+  # Stories
+  createStory(input: CreateStoryInput!): Story!
+  deleteStory(id: ID!): Boolean!
+  viewStory(storyId: ID!): Boolean!
 }
 
 type Subscription {
@@ -145,4 +373,9 @@ type Subscription {
   likeRemoved(postId: ID!): ID!
   userFollowed(userId: ID!): Follow!
   userUnfollowed(userId: ID!): ID!
+
+  # New subscriptions
+  messageReceived(conversationId: ID!): Message!
+  notificationReceived: Notification!
+  storyCreated: Story!
 }

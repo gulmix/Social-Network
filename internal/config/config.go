@@ -12,6 +12,11 @@ type Config struct {
 	Redis    RedisConfig
 	JWT      JWTConfig
 	OAuth    OAuthConfig
+	Upload   UploadConfig
+}
+
+type UploadConfig struct {
+	Dir string
 }
 
 type ServerConfig struct {
@@ -89,6 +94,9 @@ func Load() (*Config, error) {
 			GitHubClientID:     viper.GetString("GITHUB_CLIENT_ID"),
 			GitHubClientSecret: viper.GetString("GITHUB_CLIENT_SECRET"),
 			RedirectURL:        viper.GetString("OAUTH_REDIRECT_URL"),
+		},
+		Upload: UploadConfig{
+			Dir: viper.GetString("UPLOAD_DIR"),
 		},
 	}, nil
 }

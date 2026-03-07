@@ -17,6 +17,10 @@ const (
 	ChannelUserFollowed   = "user:followed:%s"
 	ChannelUserUnfollowed = "user:unfollowed:%s"
 	ChannelUserUpdated    = "user:updated:%s"
+
+	ChannelMessageReceived      = "message:received:%s"
+	ChannelNotificationReceived = "notification:received:%s"
+	ChannelStoryCreated         = "story:created"
 )
 
 type PubSub struct {

@@ -13,19 +13,25 @@ import (
 // here.
 
 type Resolver struct {
-	AuthService    *service.AuthService
-	UserService    *service.UserService
-	PostService    *service.PostService
-	CommentService *service.CommentService
-	LikeService    *service.LikeService
-	FollowService  *service.FollowService
-	UserRepo       *repository.UserRepository
-	PostRepo       *repository.PostRepository
-	CommentRepo    *repository.CommentRepository
-	LikeRepo       *repository.LikeRepository
-	FollowRepo     *repository.FollowRepository
-	Config         *config.Config
-	PubSub         *pubsub.PubSub
+	AuthService         *service.AuthService
+	UserService         *service.UserService
+	PostService         *service.PostService
+	CommentService      *service.CommentService
+	LikeService         *service.LikeService
+	FollowService       *service.FollowService
+	ConversationService *service.ConversationService
+	MessageService      *service.MessageService
+	GroupService        *service.GroupService
+	EventService        *service.EventService
+	NotificationService *service.NotificationService
+	StoryService        *service.StoryService
+	UserRepo            *repository.UserRepository
+	PostRepo            *repository.PostRepository
+	CommentRepo         *repository.CommentRepository
+	LikeRepo            *repository.LikeRepository
+	FollowRepo          *repository.FollowRepository
+	Config              *config.Config
+	PubSub              *pubsub.PubSub
 }
 
 func NewResolver(
@@ -35,6 +41,12 @@ func NewResolver(
 	commentService *service.CommentService,
 	likeService *service.LikeService,
 	followService *service.FollowService,
+	conversationService *service.ConversationService,
+	messageService *service.MessageService,
+	groupService *service.GroupService,
+	eventService *service.EventService,
+	notificationService *service.NotificationService,
+	storyService *service.StoryService,
 	userRepo *repository.UserRepository,
 	postRepo *repository.PostRepository,
 	commentRepo *repository.CommentRepository,
@@ -44,18 +56,24 @@ func NewResolver(
 	ps *pubsub.PubSub,
 ) *Resolver {
 	return &Resolver{
-		AuthService:    authService,
-		UserService:    userService,
-		PostService:    postService,
-		CommentService: commentService,
-		LikeService:    likeService,
-		FollowService:  followService,
-		UserRepo:       userRepo,
-		PostRepo:       postRepo,
-		CommentRepo:    commentRepo,
-		LikeRepo:       likeRepo,
-		FollowRepo:     followRepo,
-		Config:         cfg,
-		PubSub:         ps,
+		AuthService:         authService,
+		UserService:         userService,
+		PostService:         postService,
+		CommentService:      commentService,
+		LikeService:         likeService,
+		FollowService:       followService,
+		ConversationService: conversationService,
+		MessageService:      messageService,
+		GroupService:        groupService,
+		EventService:        eventService,
+		NotificationService: notificationService,
+		StoryService:        storyService,
+		UserRepo:            userRepo,
+		PostRepo:            postRepo,
+		CommentRepo:         commentRepo,
+		LikeRepo:            likeRepo,
+		FollowRepo:          followRepo,
+		Config:              cfg,
+		PubSub:              ps,
 	}
 }
